@@ -222,6 +222,11 @@ function gde_render_admin_page() {
 
 
 add_action('elementor/widgets/register', function($widgets_manager) {
-    require_once plugin_dir_path(__FILE__) . 'elementor-widget.php';
-    $widgets_manager->register(new \Elementor\Widget_Google_Drive_Embed());
+    $widget_file = plugin_dir_path(__FILE__) . 'elementor-widget.php';
+    if (file_exists($widget_file)) {
+        require_once $widget_file;
+        if (class_exists('Widget_Google_Drive_Embed')) {
+            $widgets_manager->register(new \Widget_Google_Drive_Embed());
+        }
+    }
 });
