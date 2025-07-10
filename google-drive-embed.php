@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: Google Drive Embed
-Description: Insert Google Drive file or folder embeds via Classic, Gutenberg, or Shortcode.
-Version: 1.2.0
+Plugin Name: Insertar Google Drive
+Description: Inserta archivos o carpetas de Google Drive al editor de WordPress.
+Version: 1.2.1
 Author: Sebastian Rodriguez
 */
 
@@ -26,7 +26,7 @@ function gde_parse_drive_link($link) {
 // 🎨 Util: Render embed HTML
 function gde_render_embed_html($id, $title, $type, $container_id = null) {
     if (!$id || $type === 'invalid') {
-        return '<p><strong>Error:</strong> Invalid Google Drive link.</p>';
+        return '<p><strong>Error:</strong> Enlace no válido.</p>';
     }
 
     $container_id = $container_id ?? rand(1, 999);
@@ -128,4 +128,4 @@ function gde_embed_shortcode($atts) {
     $parsed = gde_parse_drive_link($atts['link']);
     return gde_render_embed_html($parsed['id'], $atts['title'], $parsed['type']);
 }
-add_shortcode('gdrive_embed', 'gde_embed_shortcode');
+add_shortcode('insertar_drive', 'gde_embed_shortcode');
