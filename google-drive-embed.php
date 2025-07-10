@@ -129,3 +129,53 @@ function gde_embed_shortcode($atts) {
     return gde_render_embed_html($parsed['id'], $atts['titulo'], $parsed['type']);
 }
 add_shortcode('insertar_drive', 'gde_embed_shortcode');
+
+
+// 📘 Add admin page with usage instructions
+function gde_add_admin_menu() {
+    add_menu_page(
+        'Insertar Google Drive',
+        'Google Drive Embed',
+        'manage_options',
+        'insertar-google-drive',
+        'gde_render_admin_page',
+        'dashicons-media-document',
+        90
+    );
+}
+add_action('admin_menu', 'gde_add_admin_menu');
+
+function gde_render_admin_page() {
+    ?>
+    <div class="wrap">
+        <h1>📄 Cómo usar el shortcode [insertar_drive]</h1>
+        <p>Este plugin te permite insertar archivos o carpetas de Google Drive fácilmente en tus entradas o páginas usando el siguiente shortcode:</p>
+
+        <pre><code>[insertar_drive enlace="https://drive.google.com/drive/folders/ID" titulo="Mi Carpeta"]</code></pre>
+
+        <h2>🔹 Parámetros:</h2>
+        <ul>
+            <li><strong>enlace</strong>: URL de un archivo o carpeta de Google Drive.</li>
+            <li><strong>titulo</strong>: Título que se mostrará encima del visor.</li>
+        </ul>
+
+        <h2>✅ Ejemplos:</h2>
+
+        <p><strong>Insertar un archivo:</strong></p>
+        <pre><code>[insertar_drive enlace="https://drive.google.com/file/d/1AbcD...XYZ/preview" titulo="Mi Documento"]</code></pre>
+
+        <p><strong>Insertar una carpeta:</strong></p>
+        <pre><code>[insertar_drive enlace="https://drive.google.com/drive/folders/1XyzQ...LMN" titulo="Carpeta Pública"]</code></pre>
+
+        <h2>📌 Dónde usarlo:</h2>
+        <p>Puedes pegar el shortcode directamente en:</p>
+        <ul>
+            <li>Editor de entradas o páginas de WordPress (modo visual o HTML)</li>
+            <li>Un widget de texto o HTML</li>
+            <li>Un bloque “Shortcode” en Elementor o Gutenberg</li>
+        </ul>
+
+        <p>💡 Recuerda que el enlace de Google Drive debe tener permisos públicos o compartidos para que sea visible.</p>
+    </div>
+    <?php
+}
