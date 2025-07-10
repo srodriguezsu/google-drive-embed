@@ -2,7 +2,7 @@
 /*
 Plugin Name: Google Drive Embed
 Description: Insert Google Drive file embeds via Classic or Gutenberg editor.
-Version: 1.1
+Version: 1.1.1
 Author: Sebastian Rodriguez
 */
 
@@ -44,23 +44,26 @@ add_action('init', 'gde_register_block');
 
 // Render callback for frontend
 function gde_render_callback($attributes) {
-    $link = esc_url($attributes['link']);
+    $link = trim(esc_url_raw($attributes['link']));
     $title = esc_html($attributes['title']);
     $container_id = rand(1, 999);
 
-    // Match file ID
-    if (preg_match('/\/file\/d\/([^\/]+)/', $link, $matches)) {
+    $iframe_src = '';
+    $view_link = '';
+    $id = '';
+
+    if (preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)/', $link, $matches)) {
         $id = $matches[1];
-        $iframe_src = "https://drive.google.com/file/d/$id/preview";
-        $view_link = "https://drive.google.com/file/d/$id/view";
+        $iframe_src = "https://drive.google.com/file/d/{$id}/preview";
+        $view_link = "https://drive.google.com/file/d/{$id}/view";
+    } elseif (preg_match('/\/drive\/folders\/([a-zA-Z0-9_-]+)/', $link, $matches)) {
+        $id = $matches[1];
+        $iframe_src = "https://drive.google.com/embeddedfolderview?id={$id}#grid";
+        $view_link = "https://drive.google.com/drive/folders/{$id}";
     }
-    // Match folder ID
-    elseif (preg_match('/\/folders\/([^\/]+)/', $link, $matches)) {
-        $id = $matches[1];
-        $iframe_src = "https://drive.google.com/embeddedfolderview?id=$id#grid";
-        $view_link = "https://drive.google.com/drive/folders/$id";
-    } else {
-        return '<p>Invalid Google Drive link.</p>';
+
+    if (!$id) {
+        return '<p><strong>Error:</strong> Invalid Google Drive link.</p>';
     }
 
     return sprintf(
