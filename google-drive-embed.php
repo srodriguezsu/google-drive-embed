@@ -31,30 +31,35 @@ function gde_render_embed_html($id, $title, $type, $container_id = null) {
 
     $container_id = $container_id ?? rand(1, 999);
 
-    if ($type === 'file') {
-        $iframe_src = "https://drive.google.com/file/d/{$id}/preview";
-        $view_link = "https://drive.google.com/file/d/{$id}/view";
-    } else {
-        $iframe_src = "https://drive.google.com/embeddedfolderview?id={$id}#grid";
-        $view_link = "https://drive.google.com/drive/folders/{$id}";
+    $iframe_src = $type === 'file'
+        ? "https://drive.google.com/file/d/{$id}/preview"
+        : "https://drive.google.com/embeddedfolderview?id={$id}#grid";
+
+    $view_link = $type === 'file'
+        ? "https://drive.google.com/file/d/{$id}/view"
+        : "https://drive.google.com/drive/folders/{$id}";
+
+    // Get user settings
+    $show_title = get_option('gde_show_title', 'yes') === 'yes';
+    $show_link = get_option('gde_show_link', 'yes') === 'yes';
+    $radius = esc_attr(get_option('gde_iframe_radius', '0'));
+
+    $output = "<div id=\"google-drive-container-{$container_id}\" class=\"google-drive-container\">";
+
+    if ($show_title) {
+        $output .= "<h2>" . esc_html($title) . "</h2>";
     }
 
-    return sprintf(
-        '<div id="google-drive-container-%d">
-            <h2>%s</h2>
-            <p>
-                <iframe src="%s" width="100%%" height="480" frameborder="0" allow="autoplay"></iframe><br>
-                <a href="%s" class="btn btn-primary" target="_blank" rel="noopener noreferrer"><br>
-                Enlace a %s<br>
-                </a><br>
-            </p>
-        </div>',
-        $container_id,
-        esc_html($title),
-        $iframe_src,
-        $view_link,
-        esc_html($title)
-    );
+    $output .= "<p>
+        <iframe src=\"{$iframe_src}\" width=\"100%\" height=\"480\" frameborder=\"0\" allow=\"autoplay\" style=\"border-radius: {$radius};\"></iframe><br>";
+
+    if ($show_link) {
+        $output .= "<a href=\"{$view_link}\" class=\"btn btn-primary\" target=\"_blank\" rel=\"noopener noreferrer\"><br>Enlace a " . esc_html($title) . "<br></a><br>";
+    }
+
+    $output .= "</p></div>";
+
+    return $output;
 }
 
 //
@@ -131,7 +136,16 @@ function gde_embed_shortcode($atts) {
 add_shortcode('insertar_drive', 'gde_embed_shortcode');
 
 
-// 📘 Add admin page with usage instructions
+// 📘 Add admin page with usage instructions and settings
+
+function gde_register_settings() {
+    register_setting('gde_options_group', 'gde_show_title');
+    register_setting('gde_options_group', 'gde_show_link');
+    register_setting('gde_options_group', 'gde_iframe_radius');
+}
+add_action('admin_init', 'gde_register_settings');
+
+
 function gde_add_admin_menu() {
     add_menu_page(
         'Insertar Google Drive',
@@ -146,36 +160,63 @@ function gde_add_admin_menu() {
 add_action('admin_menu', 'gde_add_admin_menu');
 
 function gde_render_admin_page() {
+    $show_title = get_option('gde_show_title', 'yes');
+    $show_link = get_option('gde_show_link', 'yes');
+    $radius = get_option('gde_iframe_radius', '0');
+
     ?>
     <div class="wrap">
         <h1>📄 Cómo usar el shortcode [insertar_drive]</h1>
-        <p>Este plugin te permite insertar archivos o carpetas de Google Drive fácilmente en tus entradas o páginas usando el siguiente shortcode:</p>
+
+        <form method="post" action="options.php">
+            <?php settings_fields('gde_options_group'); ?>
+            <h2>🎨 Opciones de Estilo</h2>
+            <table class="form-table">
+                <tr>
+                    <th scope="row">Mostrar título</th>
+                    <td>
+                        <input type="checkbox" name="gde_show_title" value="yes" <?php checked($show_title, 'yes'); ?> />
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Mostrar enlace</th>
+                    <td>
+                        <input type="checkbox" name="gde_show_link" value="yes" <?php checked($show_link, 'yes'); ?> />
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Borde redondeado del iframe</th>
+                    <td>
+                        <input type="text" name="gde_iframe_radius" value="<?php echo esc_attr($radius); ?>" placeholder="Ej: 8px, 0.5em, etc." />
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button('Guardar cambios'); ?>
+        </form>
+
+        <hr>
+
+        <h2>🧾 Instrucciones para usar el shortcode</h2>
+        <p>Usa el shortcode <code>[insertar_drive]</code> en tus páginas o entradas:</p>
 
         <pre><code>[insertar_drive enlace="https://drive.google.com/drive/folders/ID" titulo="Mi Carpeta"]</code></pre>
 
-        <h2>🔹 Parámetros:</h2>
-        <ul>
-            <li><strong>enlace</strong>: URL de un archivo o carpeta de Google Drive.</li>
-            <li><strong>titulo</strong>: Título que se mostrará encima del visor.</li>
-        </ul>
-
-        <h2>✅ Ejemplos:</h2>
-
-        <p><strong>Insertar un archivo:</strong></p>
+        <h3>Ejemplos:</h3>
+        <p><strong>Archivo:</strong></p>
         <pre><code>[insertar_drive enlace="https://drive.google.com/file/d/1AbcD...XYZ/preview" titulo="Mi Documento"]</code></pre>
 
-        <p><strong>Insertar una carpeta:</strong></p>
+        <p><strong>Carpeta:</strong></p>
         <pre><code>[insertar_drive enlace="https://drive.google.com/drive/folders/1XyzQ...LMN" titulo="Carpeta Pública"]</code></pre>
 
-        <h2>📌 Dónde usarlo:</h2>
-        <p>Puedes pegar el shortcode directamente en:</p>
+        <h3>¿Dónde usarlo?</h3>
         <ul>
-            <li>Editor de entradas o páginas de WordPress (modo visual o HTML)</li>
-            <li>Un widget de texto o HTML</li>
-            <li>Un bloque “Shortcode” en Elementor o Gutenberg</li>
+            <li>Editor de WordPress (visual o código)</li>
+            <li>Widgets HTML o de texto</li>
+            <li>Editor Elementor (con bloque Shortcode)</li>
         </ul>
 
-        <p>💡 Recuerda que el enlace de Google Drive debe tener permisos públicos o compartidos para que sea visible.</p>
+        <p>💡 Asegúrate de que los enlaces de Drive sean públicos o compartidos para que funcionen correctamente.</p>
     </div>
     <?php
 }
+
