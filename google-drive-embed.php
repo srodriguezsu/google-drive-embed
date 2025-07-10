@@ -88,12 +88,20 @@ function gde_register_block() {
         'gde-block',
         plugins_url('block/block.js', __FILE__),
         array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components'),
-        filemtime(plugin_dir_path(__FILE__) . 'block/block.js'),
-        true
+        filemtime(plugin_dir_path(__FILE__) . 'block/block.js')
+    );
+
+    // Register block editor styles
+    wp_register_style(
+        'gde-block-editor',
+        plugins_url('block/editor.css', __FILE__),
+        array(),
+        filemtime(plugin_dir_path(__FILE__) . 'block/editor.css')
     );
 
     register_block_type('gde/google-drive', array(
         'editor_script' => 'gde-block',
+        'editor_style' => 'gde-block-editor',
         'render_callback' => 'gde_render_callback',
         'attributes' => array(
             'link' => array('type' => 'string'),

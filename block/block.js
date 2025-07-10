@@ -1,30 +1,48 @@
 const { registerBlockType } = wp.blocks;
 const { TextControl } = wp.components;
-const { Fragment } = wp.element;
+const { InspectorControls } = wp.blockEditor;
 
 registerBlockType('gde/google-drive', {
     title: 'Google Drive Embed',
-    icon: 'media-document',
+    icon: 'google', // or use a custom dashicon
     category: 'embed',
     attributes: {
-        link: { type: 'string' },
-        title: { type: 'string' },
+        link: {
+            type: 'string',
+            default: ''
+        },
+        title: {
+            type: 'string',
+            default: 'Documento'
+        }
     },
-    edit: ({ attributes, setAttributes }) => {
-        return (
-            <Fragment>
-                <TextControl
-                    label="Google Drive Link"
-                    value={attributes.link}
-                    onChange={(val) => setAttributes({ link: val })}
-                />
-                <TextControl
-                    label="Title"
-                    value={attributes.title}
-                    onChange={(val) => setAttributes({ title: val })}
-                />
-            </Fragment>
-        );
+    edit: function(props) {
+        const { attributes, setAttributes } = props;
+
+        return [
+            <InspectorControls>
+                <div className="gde-inspector-controls">
+                    <TextControl
+                        label="Google Drive Link"
+                        value={attributes.link}
+                        onChange={(link) => setAttributes({ link })}
+                    />
+                    <TextControl
+                        label="Title"
+                        value={attributes.title}
+                        onChange={(title) => setAttributes({ title })}
+                    />
+                </div>
+            </InspectorControls>,
+            <div className="gde-preview">
+                {attributes.link ?
+                    <p>Google Drive Embed: {attributes.title}</p> :
+                    <p>Insert Google Drive Link</p>
+                }
+            </div>
+        ];
     },
-    save: () => null, // Rendered server-side
+    save: function() {
+        return null; // Dynamic blocks return null in save
+    }
 });
