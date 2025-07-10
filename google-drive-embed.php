@@ -2,7 +2,7 @@
 /*
 Plugin Name: Insertar Google Drive
 Description: Inserta archivos o carpetas de Google Drive al editor de WordPress.
-Version: 1.2.3
+Version: 1.2.4
 Author: Sebastian Rodriguez
 */
 
@@ -70,7 +70,7 @@ function gde_classic_editor_assets() {
         'gde-editor',
         plugins_url('js/editor.js', __FILE__),
         array('jquery'),
-        null,
+        filemtime(plugin_dir_path(__FILE__) . 'js/editor.js'),
         true
     );
 }
