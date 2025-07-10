@@ -44,20 +44,41 @@ add_action('init', 'gde_register_block');
 function gde_render_callback($attributes) {
     $link = esc_url($attributes['link']);
     $title = esc_html($attributes['title']);
-    $id = preg_match('/\/d\/([^\/]+)/', $link, $matches) ? $matches[1] : '';
-    if (!$id) return '';
+    $container_id = rand(1, 999);
 
-    $iframe = sprintf(
-        '<div id="google-drive-container-%d"><h2>%s</h2><p><iframe src="https://drive.google.com/file/d/%s/preview" width="640" height="480" allow="autoplay"></iframe><br><a href="https://drive.google.com/file/d/%s/view" class="btn btn-primary" target="_blank" rel="noopener noreferrer"><br>Enlace a %s<br></a><br><br></p></div>',
-        rand(1, 999),
+    // Match file ID
+    if (preg_match('/\/file\/d\/([^\/]+)/', $link, $matches)) {
+        $id = $matches[1];
+        $iframe_src = "https://drive.google.com/file/d/$id/preview";
+        $view_link = "https://drive.google.com/file/d/$id/view";
+    }
+    // Match folder ID
+    elseif (preg_match('/\/folders\/([^\/]+)/', $link, $matches)) {
+        $id = $matches[1];
+        $iframe_src = "https://drive.google.com/embeddedfolderview?id=$id#grid";
+        $view_link = "https://drive.google.com/drive/folders/$id";
+    } else {
+        return '<p>Invalid Google Drive link.</p>';
+    }
+
+    return sprintf(
+        '<div id="google-drive-container-%d">
+            <h2>%s</h2>
+            <p>
+                <iframe src="%s" width="100%%" height="480" frameborder="0" allow="autoplay"></iframe><br>
+                <a href="%s" class="btn btn-primary" target="_blank" rel="noopener noreferrer"><br>
+                Enlace a %s<br>
+                </a><br>
+            </p>
+        </div>',
+        $container_id,
         $title,
-        $id,
-        $id,
+        $iframe_src,
+        $view_link,
         $title
     );
-
-    return $iframe;
 }
+
 
 function gde_embed_shortcode($atts) {
     $atts = shortcode_atts(array(
@@ -67,30 +88,38 @@ function gde_embed_shortcode($atts) {
 
     $link = esc_url($atts['link']);
     $title = esc_html($atts['title']);
+    $container_id = rand(1, 999);
 
-    if (preg_match('/\/d\/([^\/]+)/', $link, $matches)) {
+    if (preg_match('/\/file\/d\/([^\/]+)/', $link, $matches)) {
         $id = $matches[1];
+        $iframe_src = "https://drive.google.com/file/d/$id/preview";
+        $view_link = "https://drive.google.com/file/d/$id/view";
+    } elseif (preg_match('/\/folders\/([^\/]+)/', $link, $matches)) {
+        $id = $matches[1];
+        $iframe_src = "https://drive.google.com/embeddedfolderview?id=$id#grid";
+        $view_link = "https://drive.google.com/drive/folders/$id";
     } else {
-        return '<p>Invalid Google Drive link</p>';
+        return '<p>Invalid Google Drive link.</p>';
     }
 
     return sprintf(
         '<div id="google-drive-container-%d">
             <h2>%s</h2>
             <p>
-                <iframe src="https://drive.google.com/file/d/%s/preview" width="640" height="480" allow="autoplay"></iframe><br>
-                <a href="https://drive.google.com/file/d/%s/view" class="btn btn-primary" target="_blank" rel="noopener noreferrer"><br>
+                <iframe src="%s" width="100%%" height="480" frameborder="0" allow="autoplay"></iframe><br>
+                <a href="%s" class="btn btn-primary" target="_blank" rel="noopener noreferrer"><br>
                 Enlace a %s<br>
-                </a><br><br>
+                </a><br>
             </p>
         </div>',
-        rand(1, 999),
+        $container_id,
         $title,
-        $id,
-        $id,
+        $iframe_src,
+        $view_link,
         $title
     );
 }
+
 add_shortcode('gdrive_embed', 'gde_embed_shortcode');
 
 add_filter('mce_external_plugins', function($plugins) {
