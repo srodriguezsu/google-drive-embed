@@ -220,3 +220,8 @@ function gde_render_admin_page() {
     <?php
 }
 
+
+add_action('elementor/widgets/register', function($widgets_manager) {
+    require_once plugin_dir_path(__FILE__) . 'elementor-widget.php';
+    $widgets_manager->register(new \Elementor\Widget_Google_Drive_Embed());
+});
