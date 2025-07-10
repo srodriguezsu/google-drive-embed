@@ -2,7 +2,7 @@
 /*
 Plugin Name: Insertar Google Drive
 Description: Inserta archivos o carpetas de Google Drive al editor de WordPress.
-Version: 1.2.1
+Version: 1.2.2
 Author: Sebastian Rodriguez
 */
 
