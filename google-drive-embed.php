@@ -121,11 +121,11 @@ function gde_render_callback($attributes) {
 //
 function gde_embed_shortcode($atts) {
     $atts = shortcode_atts(array(
-        'link' => '',
-        'title' => 'Documento',
+        'enlace' => '',
+        'titulo' => 'Documento',
     ), $atts);
 
-    $parsed = gde_parse_drive_link($atts['link']);
-    return gde_render_embed_html($parsed['id'], $atts['title'], $parsed['type']);
+    $parsed = gde_parse_drive_link($atts['enlace']);
+    return gde_render_embed_html($parsed['id'], $atts['titulo'], $parsed['type']);
 }
 add_shortcode('insertar_drive', 'gde_embed_shortcode');
