@@ -1,14 +1,65 @@
 <?php
 /*
 Plugin Name: Google Drive Embed
-Description: Insert Google Drive file embeds via Classic or Gutenberg editor.
-Version: 1.1.1
+Description: Insert Google Drive file or folder embeds via Classic, Gutenberg, or Shortcode.
+Version: 1.2.0
 Author: Sebastian Rodriguez
 */
 
-defined('ABSPATH') or die('No script kiddies please!');
+defined('ABSPATH') or exit;
 
-// Register scripts for Classic Editor
+// 🔧 Util: Extract Google Drive ID and type
+function gde_parse_drive_link($link) {
+    $link = trim(esc_url_raw($link));
+
+    if (preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)/', $link, $matches)) {
+        return ['type' => 'file', 'id' => $matches[1]];
+    }
+
+    if (preg_match('/\/drive\/folders\/([a-zA-Z0-9_-]+)/', $link, $matches)) {
+        return ['type' => 'folder', 'id' => $matches[1]];
+    }
+
+    return ['type' => 'invalid', 'id' => null];
+}
+
+// 🎨 Util: Render embed HTML
+function gde_render_embed_html($id, $title, $type, $container_id = null) {
+    if (!$id || $type === 'invalid') {
+        return '<p><strong>Error:</strong> Invalid Google Drive link.</p>';
+    }
+
+    $container_id = $container_id ?? rand(1, 999);
+
+    if ($type === 'file') {
+        $iframe_src = "https://drive.google.com/file/d/{$id}/preview";
+        $view_link = "https://drive.google.com/file/d/{$id}/view";
+    } else {
+        $iframe_src = "https://drive.google.com/embeddedfolderview?id={$id}#grid";
+        $view_link = "https://drive.google.com/drive/folders/{$id}";
+    }
+
+    return sprintf(
+        '<div id="google-drive-container-%d">
+            <h2>%s</h2>
+            <p>
+                <iframe src="%s" width="100%%" height="480" frameborder="0" allow="autoplay"></iframe><br>
+                <a href="%s" class="btn btn-primary" target="_blank" rel="noopener noreferrer"><br>
+                Enlace a %s<br>
+                </a><br>
+            </p>
+        </div>',
+        $container_id,
+        esc_html($title),
+        $iframe_src,
+        $view_link,
+        esc_html($title)
+    );
+}
+
+//
+// 🔌 Classic Editor Integration
+//
 function gde_classic_editor_assets() {
     wp_enqueue_script(
         'gde-editor',
@@ -20,7 +71,18 @@ function gde_classic_editor_assets() {
 }
 add_action('admin_enqueue_scripts', 'gde_classic_editor_assets');
 
-// Register Gutenberg block
+add_filter('mce_external_plugins', function ($plugins) {
+    $plugins['gde_button'] = plugins_url('js/editor.js', __FILE__);
+    return $plugins;
+});
+add_filter('mce_buttons', function ($buttons) {
+    array_push($buttons, 'gde_button');
+    return $buttons;
+});
+
+//
+// 🧱 Gutenberg Block Registration
+//
 function gde_register_block() {
     wp_register_script(
         'gde-block',
@@ -41,99 +103,21 @@ function gde_register_block() {
 }
 add_action('init', 'gde_register_block');
 
-
-// Render callback for frontend
 function gde_render_callback($attributes) {
-    $link = trim(esc_url_raw($attributes['link']));
-    $title = esc_html($attributes['title']);
-    $container_id = rand(1, 999);
-
-    $iframe_src = '';
-    $view_link = '';
-    $id = '';
-
-    if (preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)/', $link, $matches)) {
-        $id = $matches[1];
-        $iframe_src = "https://drive.google.com/file/d/{$id}/preview";
-        $view_link = "https://drive.google.com/file/d/{$id}/view";
-    } elseif (preg_match('/\/drive\/folders\/([a-zA-Z0-9_-]+)/', $link, $matches)) {
-        $id = $matches[1];
-        $iframe_src = "https://drive.google.com/embeddedfolderview?id={$id}#grid";
-        $view_link = "https://drive.google.com/drive/folders/{$id}";
-    }
-
-    if (!$id) {
-        return '<p><strong>Error:</strong> Invalid Google Drive link.</p>';
-    }
-
-    return sprintf(
-        '<div id="google-drive-container-%d">
-            <h2>%s</h2>
-            <p>
-                <iframe src="%s" width="100%%" height="480" frameborder="0" allow="autoplay"></iframe><br>
-                <a href="%s" class="btn btn-primary" target="_blank" rel="noopener noreferrer"><br>
-                Enlace a %s<br>
-                </a><br>
-            </p>
-        </div>',
-        $container_id,
-        $title,
-        $iframe_src,
-        $view_link,
-        $title
-    );
+    $parsed = gde_parse_drive_link($attributes['link']);
+    return gde_render_embed_html($parsed['id'], $attributes['title'], $parsed['type']);
 }
 
-
+//
+// 🔢 Shortcode Support
+//
 function gde_embed_shortcode($atts) {
     $atts = shortcode_atts(array(
         'link' => '',
         'title' => 'Documento',
     ), $atts);
 
-    $link = esc_url($atts['link']);
-    $title = esc_html($atts['title']);
-    $container_id = rand(1, 999);
-
-    if (preg_match('/\/file\/d\/([^\/]+)/', $link, $matches)) {
-        $id = $matches[1];
-        $iframe_src = "https://drive.google.com/file/d/$id/preview";
-        $view_link = "https://drive.google.com/file/d/$id/view";
-    } elseif (preg_match('/\/folders\/([^\/]+)/', $link, $matches)) {
-        $id = $matches[1];
-        $iframe_src = "https://drive.google.com/embeddedfolderview?id=$id#grid";
-        $view_link = "https://drive.google.com/drive/folders/$id";
-    } else {
-        return '<p>Invalid Google Drive link.</p>';
-    }
-
-    return sprintf(
-        '<div id="google-drive-container-%d">
-            <h2>%s</h2>
-            <p>
-                <iframe src="%s" width="100%%" height="480" frameborder="0" allow="autoplay"></iframe><br>
-                <a href="%s" class="btn btn-primary" target="_blank" rel="noopener noreferrer"><br>
-                Enlace a %s<br>
-                </a><br>
-            </p>
-        </div>',
-        $container_id,
-        $title,
-        $iframe_src,
-        $view_link,
-        $title
-    );
+    $parsed = gde_parse_drive_link($atts['link']);
+    return gde_render_embed_html($parsed['id'], $atts['title'], $parsed['type']);
 }
-
 add_shortcode('gdrive_embed', 'gde_embed_shortcode');
-
-add_filter('mce_external_plugins', function($plugins) {
-    $plugins['gde_button'] = plugins_url('js/editor.js', __FILE__);
-    return $plugins;
-});
-
-add_filter('mce_buttons', function($buttons) {
-    array_push($buttons, 'gde_button');
-    return $buttons;
-});
-
