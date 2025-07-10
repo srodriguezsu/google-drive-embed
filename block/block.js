@@ -4,28 +4,27 @@ const { Fragment } = wp.element;
 
 registerBlockType('gde/google-drive', {
     title: 'Google Drive Embed',
-    icon: 'admin-media',
+    icon: 'media-document',
     category: 'embed',
     attributes: {
         link: { type: 'string' },
         title: { type: 'string' },
     },
     edit: ({ attributes, setAttributes }) => {
-        const { link, title } = attributes;
         return (
             <Fragment>
                 <TextControl
                     label="Google Drive Link"
-                    value={link}
+                    value={attributes.link}
                     onChange={(val) => setAttributes({ link: val })}
                 />
                 <TextControl
                     label="Title"
-                    value={title}
+                    value={attributes.title}
                     onChange={(val) => setAttributes({ title: val })}
                 />
             </Fragment>
         );
     },
-    save: () => null, // Rendered via PHP
+    save: () => null, // Rendered server-side
 });

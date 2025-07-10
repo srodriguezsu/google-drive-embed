@@ -26,9 +26,10 @@ function gde_register_block() {
         'gde-block',
         plugins_url('block/block.js', __FILE__),
         array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components'),
-        null,
+        filemtime(plugin_dir_path(__FILE__) . 'block/block.js'),
         true
     );
+
     register_block_type('gde/google-drive', array(
         'editor_script' => 'gde-block',
         'render_callback' => 'gde_render_callback',
@@ -39,6 +40,7 @@ function gde_register_block() {
     ));
 }
 add_action('init', 'gde_register_block');
+
 
 // Render callback for frontend
 function gde_render_callback($attributes) {
