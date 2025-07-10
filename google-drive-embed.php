@@ -2,8 +2,8 @@
 /*
 Plugin Name: Google Drive Embed
 Description: Insert Google Drive file embeds via Classic or Gutenberg editor.
-Version: 1.0
-Author: Your Name
+Version: 1.1
+Author: Sebastian Rodriguez
 */
 
 defined('ABSPATH') or die('No script kiddies please!');
