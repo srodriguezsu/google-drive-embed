@@ -1,0 +1,18 @@
+{
+  "apiVersion": 2,
+  "name": "gde/google-drive",
+  "title": "Insertar Google Drive",
+  "category": "embed",
+  "icon": "admin-media",
+  "description": "Inserta archivos o carpetas de Google Drive como un iframe.",
+  "attributes": {
+    "link": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    }
+  },
+  "editorScript": "gde-block",
+  "editorStyle": "gde-block-editor"
+}
